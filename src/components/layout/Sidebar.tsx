@@ -3,17 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Kanban, LayoutDashboard, LayoutList, Target, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NAV_ITEMS } from "@/lib/nav-items";
 import type { Usuario } from "@/lib/types/database";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pipeline", label: "Pipeline", icon: Kanban },
-  { href: "/leads", label: "Leads", icon: LayoutList },
-  { href: "/leads/novo", label: "Novo lead", icon: UserPlus },
-  { href: "/metas", label: "Metas", icon: Target },
-];
 
 export function Sidebar({ usuario }: { usuario: Usuario }) {
   const pathname = usePathname();
