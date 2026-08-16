@@ -14,6 +14,20 @@ V1. Ver também [README.md](./README.md) para setup e estrutura de pastas.
 - **Deploy alvo:** Vercel (não configurado ainda nesta sessão).
 - **Drag-and-drop do kanban:** @dnd-kit.
 
+## V2 — Metas comerciais (`/metas`)
+
+- `metas.valor_realizado` (coluna do schema original) **não é usada** pelo app — o "realizado" é
+  sempre calculado ao vivo em `src/lib/metas.ts` a partir de `interacoes`/`propostas`/
+  `estagio_historico`, filtrados pelo período (`YYYY-MM`) selecionado. Decisão: evita depender de
+  cron/trigger pra manter esse número sincronizado. Se o volume de dados um dia pedir cache,
+  materializar isso vira um bom próximo passo.
+- Cada `tipo_meta` tem uma fórmula própria (contatos/dia = interações tipo ligação/reunião ÷ dias
+  decorridos; propostas/semana = propostas enviadas ÷ semanas decorridas; taxa de conversão e
+  valor fechado usam `estagio_historico` para saber quando o lead fechou, não `criado_em`).
+- Limitação conhecida (não é bug): metas "time inteiro" (`usuario_id = null`) calculam o
+  realizado com base no que a sessão atual enxerga via RLS — corretas para admin, subestimadas
+  para um usuário `comercial` (que só vê os próprios leads). Ver README.
+
 ## Decisões de RLS/autorização
 
 - `usuarios.papel`: `admin` (vê tudo, todos os mercados) ou `comercial` (vê leads onde é
@@ -119,9 +133,9 @@ no futuro (V3 do roadmap da Auge, não deste CRM).
 
 ### 7. Roadmap
 
-1. **V1** — CRM básico: cadastro de leads, pipeline kanban, interações, propostas, motivos de
+1. **V1** ✅ — CRM básico: cadastro de leads, pipeline kanban, interações, propostas, motivos de
    perda, follow-ups, multi-usuário, separação por mercado.
-2. **V2** — Metas comerciais + dashboards de acompanhamento.
+2. **V2** ✅ — Metas comerciais + dashboards de acompanhamento (`/metas`).
 3. **V3** — Integrações reais com Meta Ads e Google Ads.
 4. **V4** — (projeto separado da Auge) agente de IA para atendimento automático de clientes.
 

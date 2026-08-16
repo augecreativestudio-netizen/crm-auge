@@ -6,7 +6,14 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-auge-beige px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <Image src="/auge-logo.png" alt="Auge Creative Studio" width={96} height={96} priority />
+          <Image
+            src="/auge-logo.png"
+            alt="Auge Creative Studio"
+            width={96}
+            height={96}
+            className="h-24 w-24"
+            priority
+          />
           <div>
             <h1 className="font-display text-2xl text-auge-green">CRM Auge</h1>
             <p className="font-script text-lg text-auge-brown">creative studio</p>

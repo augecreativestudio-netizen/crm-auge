@@ -3,6 +3,7 @@ import type {
   MotivoPerdaEnum,
   OrigemLead,
   TipoInteracao,
+  TipoMetaEnum,
 } from "@/lib/types/database";
 
 export const ESTAGIOS: { value: EstagioPipeline; label: string }[] = [
@@ -62,3 +63,47 @@ export const MERCADO_LABEL: Record<(typeof MERCADOS_CODIGO)[number], string> = {
   INTL: "Internacional",
   PT: "Portugal",
 };
+
+/**
+ * Tipos de meta (seção 4.6 do briefing). `unidade` é usada tanto no formulário de
+ * cadastro (admin) quanto na exibição do progresso real vs. meta.
+ */
+export const TIPOS_META: {
+  value: TipoMetaEnum;
+  label: string;
+  unidade: string;
+  descricao: string;
+}[] = [
+  {
+    value: "contatos_dia",
+    label: "Contatos por dia",
+    unidade: "contatos/dia",
+    descricao: "Média de ligações/reuniões registradas por dia útil no período.",
+  },
+  {
+    value: "propostas_semana",
+    label: "Propostas por semana",
+    unidade: "propostas/semana",
+    descricao: "Média de propostas enviadas por semana no período.",
+  },
+  {
+    value: "taxa_conversao",
+    label: "Taxa de conversão",
+    unidade: "%",
+    descricao: "% de leads fechados no período que viraram \"Fechado (ganho)\".",
+  },
+  {
+    value: "valor_fechado",
+    label: "Valor fechado no mês",
+    unidade: "moeda",
+    descricao: "Soma do valor das propostas de leads fechados como \"ganho\" no período.",
+  },
+];
+
+export function tipoMetaLabel(value: TipoMetaEnum) {
+  return TIPOS_META.find((t) => t.value === value)?.label ?? value;
+}
+
+export function tipoMetaInfo(value: TipoMetaEnum) {
+  return TIPOS_META.find((t) => t.value === value) ?? TIPOS_META[0];
+}

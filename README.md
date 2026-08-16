@@ -65,16 +65,19 @@ src/
     (dashboard)/         área autenticada (layout com sidebar + topbar)
       pipeline/           kanban do funil comercial
       leads/              lista de leads, cadastro, detalhe (timeline/propostas/follow-ups)
+      metas/              metas comerciais + painel real vs. meta (V2)
     actions/auth.ts      Server Action de logout
     proxy.ts             "Proxy" do Next 16 (era middleware.ts) — refresh de sessão + redirects
   components/
     kanban/               board, coluna, card, modal de motivo de perda
     leads/                formulários de interação/proposta/follow-up
+    metas/                formulário de meta, card de progresso, seletor de período
     layout/               sidebar, topbar, seletor de mercado
   lib/
     supabase/             clients browser/server (@supabase/ssr)
     dal.ts                Data Access Layer — checagem de sessão centralizada
-    constants.ts           labels/opções dos enums (estágios, origens, motivos de perda…)
+    constants.ts           labels/opções dos enums (estágios, origens, motivos de perda, metas…)
+    metas.ts               motor de cálculo do "realizado" das metas (ver comentário no topo)
     types/database.ts      tipos TS espelhando o schema (ver nota no topo do arquivo)
 supabase/
   migrations/             SQL — schema, RLS, storage
@@ -82,9 +85,12 @@ supabase/
 
 ## Roadmap
 
-- **V1 (este repo)** — CRM básico: leads, pipeline kanban, interações, propostas, motivos de
-  perda, follow-ups, multi-usuário, segmentação por mercado. ✅
-- **V2** — Metas comerciais + dashboards de acompanhamento (tabela `metas` já existe no schema).
+- **V1** — CRM básico: leads, pipeline kanban, interações, propostas, motivos de perda,
+  follow-ups, multi-usuário, segmentação por mercado. ✅
+- **V2 (este repo)** — Metas comerciais + dashboard de acompanhamento (real vs. meta), em
+  `/metas`. Admin cadastra metas por usuário (ou "time inteiro") × mercado × período × tipo
+  (contatos/dia, propostas/semana, taxa de conversão, valor fechado); o "realizado" é calculado ao
+  vivo a partir de interações/propostas/histórico de estágio — não depende de job/cron. ✅
 - **V3** — Integrações reais com Meta Ads e Google Ads (a tabela `campanhas_ads` já está
   desenhada para isso — ver seção 4.8 do briefing).
 - **V4** — Agente de IA para atendimento automático (projeto separado da Auge).
@@ -100,3 +106,7 @@ supabase/
   ```
 - RLS: `admin` vê tudo; `comercial` vê apenas leads onde é responsável ou criador (seção 4.7 do
   briefing — "comercial pode ter visão restrita ao que é responsável").
+- Consequência disso em `/metas`: uma meta "time inteiro" (sem usuário específico) calcula o
+  realizado a partir do que a sessão atual consegue enxergar via RLS. Para um admin, isso é o
+  total real do mercado; para um usuário `comercial`, é só a fatia dele — o número fica
+  subestimado nesse caso. É esperado dado o modelo de RLS da V1, não um bug.
