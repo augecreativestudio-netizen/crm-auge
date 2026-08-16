@@ -7,7 +7,7 @@ import type { EstagioPipeline, MotivoPerdaEnum } from "@/lib/types/database";
 
 /** Move um lead para qualquer estágio, exceto "Fechado (perdido)" — ver moveLeadToLost. */
 export async function moveLeadStage(leadId: string, novoEstagio: EstagioPipeline) {
-  await getCurrentUsuario();
+  const usuario = await getCurrentUsuario();
 
   if (novoEstagio === "fechado_perdido") {
     throw new Error("Use moveLeadToLost para marcar um lead como perdido.");
@@ -21,7 +21,36 @@ export async function moveLeadStage(leadId: string, novoEstagio: EstagioPipeline
 
   if (error) throw new Error(error.message);
 
+  // Ao entrar em "Reunião agendada", cria automaticamente a tarefa
+  // "Elaborar proposta" (se ainda não existir uma em aberto pra esse lead) —
+  // pedido do usuário, pra não esquecer de preparar a proposta pós-reunião.
+  if (novoEstagio === "reuniao_agendada") {
+    const { data: existente } = await supabase
+      .from("followups")
+      .select("id")
+      .eq("lead_id", leadId)
+      .eq("titulo", "Elaborar proposta")
+      .eq("tipo", "tarefa")
+      .eq("concluido", false)
+      .maybeSingle();
+
+    if (!existente) {
+      const prazo = new Date();
+      prazo.setDate(prazo.getDate() + 2);
+
+      await supabase.from("followups").insert({
+        lead_id: leadId,
+        tipo: "tarefa",
+        titulo: "Elaborar proposta",
+        data_prevista: prazo.toISOString().slice(0, 10),
+        responsavel_id: usuario.id,
+      });
+    }
+  }
+
   revalidatePath("/pipeline");
+  revalidatePath("/dashboard");
+  revalidatePath(`/leads/${leadId}`);
 }
 
 /**

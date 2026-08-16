@@ -9,10 +9,12 @@ export function NewLeadForm({
   mercados,
   usuarios,
   usuarioAtual,
+  mercadoPadraoId,
 }: {
   mercados: Mercado[];
   usuarios: Usuario[];
   usuarioAtual: Usuario;
+  mercadoPadraoId?: string;
 }) {
   const [state, action, pending] = useActionState<LeadFormState, FormData>(createLead, undefined);
   const [origem, setOrigem] = useState<OrigemLead | "">("");
@@ -30,13 +32,36 @@ export function NewLeadForm({
         </Field>
       </div>
 
-      <Field label="Contato (telefone, e-mail ou WhatsApp)" htmlFor="contato">
-        <input id="contato" name="contato" className={inputClass} placeholder="(48) 99999-0000" />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Telefone" htmlFor="telefone">
+          <input id="telefone" name="telefone" className={inputClass} placeholder="(48) 99999-0000" />
+        </Field>
+        <Field label="E-mail" htmlFor="email">
+          <input id="email" name="email" type="email" className={inputClass} placeholder="contato@empresa.com" />
+        </Field>
+        <Field label="WhatsApp" htmlFor="whatsapp">
+          <input id="whatsapp" name="whatsapp" className={inputClass} placeholder="(48) 99999-0000" />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Instagram" htmlFor="instagram">
+          <input id="instagram" name="instagram" className={inputClass} placeholder="@augecreative.studio" />
+        </Field>
+        <Field label="Site" htmlFor="site">
+          <input id="site" name="site" className={inputClass} placeholder="https://exemplo.com" />
+        </Field>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Mercado *" htmlFor="mercado_id">
-          <select id="mercado_id" name="mercado_id" required defaultValue={usuarioAtual.mercado_padrao_id ?? ""} className={inputClass}>
+          <select
+            id="mercado_id"
+            name="mercado_id"
+            required
+            defaultValue={mercadoPadraoId ?? usuarioAtual.mercado_padrao_id ?? ""}
+            className={inputClass}
+          >
             <option value="" disabled>
               Selecione…
             </option>

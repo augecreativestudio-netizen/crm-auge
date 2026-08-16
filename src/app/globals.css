@@ -34,14 +34,15 @@
   --font-script: var(--font-caveat);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #12251c;
-    --foreground: #EFE9D3;
-    --color-card: #1B3226;
-    --color-border: #2E5C43;
-  }
-}
+/*
+ * Sem tema escuro automático de propósito: esta é uma ferramenta interna com
+ * paleta de marca fixa (fundo bege claro, texto verde escuro). Os componentes
+ * usam `bg-white`/`text-auge-green` diretamente em vários lugares e não foram
+ * desenhados para inverter — herdar o dark mode do SO deixava texto verde
+ * escuro sobre fundo verde escuro, ilegível. Se um tema escuro de verdade for
+ * pedido no futuro, é melhor desenhá-lo componente por componente, em vez de
+ * reativar isto.
+ */
 
 body {
   background: var(--background);
@@ -49,6 +50,12 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display), Georgia, serif;
-}
+/*
+ * Sem regra global de h1/h2/h3 aqui de propósito: CSS solto (fora de @layer)
+ * sempre vence utilities do Tailwind na cascata, não importa a especificidade
+ * — então uma regra "h1,h2,h3{font-family:calistoga}" aqui bloquearia
+ * qualquer `font-sans` aplicado a um heading. A utility `.font-display`
+ * (gerada automaticamente pelo token --font-display no @theme acima) já
+ * cobre os títulos que devem usar Calistoga; os que não têm essa classe
+ * herdam a fonte do body (Poppins) normalmente.
+ */

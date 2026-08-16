@@ -2,7 +2,13 @@
 
 import { useRef, useTransition } from "react";
 
-export function FollowupForm({ action }: { action: (formData: FormData) => Promise<void> }) {
+export function FollowupForm({
+  action,
+  placeholder = "Ex: ligar de volta",
+}: {
+  action: (formData: FormData) => Promise<void>;
+  placeholder?: string;
+}) {
   const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
 
@@ -20,7 +26,7 @@ export function FollowupForm({ action }: { action: (formData: FormData) => Promi
       <input
         name="titulo"
         required
-        placeholder="Ex: ligar de volta"
+        placeholder={placeholder}
         className="flex-1 rounded-lg border border-border bg-white px-3 py-2 text-sm text-auge-green outline-none focus:border-auge-brown focus:ring-2 focus:ring-auge-brown/20"
       />
       <input

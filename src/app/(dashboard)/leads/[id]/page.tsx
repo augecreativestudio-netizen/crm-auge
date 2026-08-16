@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { estagioLabel, origemLabel, motivoPerdaLabel, MERCADO_LABEL } from "@/lib/constants";
 import { InteracaoForm } from "@/components/leads/InteracaoForm";
+import { InteracaoItem } from "@/components/leads/InteracaoItem";
 import { PropostaForm } from "@/components/leads/PropostaForm";
+import { PropostaItem } from "@/components/leads/PropostaItem";
 import { FollowupForm } from "@/components/leads/FollowupForm";
 import { FollowupList } from "@/components/leads/FollowupList";
-import { addInteracao, addProposta, addFollowup } from "../actions";
+import { addInteracao, addProposta, addTarefa, addFollowUp } from "../actions";
 import type { Followup, Interacao, Proposta } from "@/lib/types/database";
-import { format } from "date-fns";
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,7 +39,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   const boundAddInteracao = addInteracao.bind(null, id);
   const boundAddProposta = addProposta.bind(null, id);
-  const boundAddFollowup = addFollowup.bind(null, id);
+  const boundAddTarefa = addTarefa.bind(null, id);
+  const boundAddFollowUp = addFollowUp.bind(null, id);
+
+  const todosFollowups = (followups as Followup[]) ?? [];
+  const tarefas = todosFollowups.filter((f) => f.tipo === "tarefa");
+  const followUpsApenas = todosFollowups.filter((f) => f.tipo === "follow_up");
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -57,10 +63,30 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <dl className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <Info label="Mercado" value={mercadoInfo?.nome ?? MERCADO_LABEL.BR} />
           <Info label="Origem" value={origemLabel(lead.origem)} />
-          <Info label="Contato" value={lead.contato ?? "—"} />
           <Info
             label="Responsável"
             value={lead.responsavel_id ? usuarioMap.get(lead.responsavel_id) ?? "—" : "—"}
+          />
+          <Info label="Telefone" value={lead.telefone ?? "—"} href={lead.telefone ? `tel:${lead.telefone}` : undefined} />
+          <Info label="E-mail" value={lead.email ?? "—"} href={lead.email ? `mailto:${lead.email}` : undefined} />
+          <Info
+            label="WhatsApp"
+            value={lead.whatsapp ?? "—"}
+            href={lead.whatsapp ? `https://wa.me/${lead.whatsapp.replace(/\D/g, "")}` : undefined}
+          />
+          <Info
+            label="Instagram"
+            value={lead.instagram ?? "—"}
+            href={
+              lead.instagram
+                ? `https://instagram.com/${lead.instagram.replace(/^@/, "")}`
+                : undefined
+            }
+          />
+          <Info
+            label="Site"
+            value={lead.site ?? "—"}
+            href={lead.site ? (lead.site.startsWith("http") ? lead.site : `https://${lead.site}`) : undefined}
           />
         </dl>
 
@@ -72,10 +98,16 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         )}
       </div>
 
-      {/* Follow-ups */}
+      {/* Tarefas — ações internas do vendedor, ex: "Elaborar proposta" */}
+      <Section title="Tarefas">
+        <FollowupForm action={boundAddTarefa} placeholder="Ex: elaborar proposta" />
+        <FollowupList leadId={id} followups={tarefas} emptyMessage="Nenhuma tarefa cadastrada." />
+      </Section>
+
+      {/* Follow-ups — próximo contato com o lead, ex: "Ligar de volta em 3 dias" */}
       <Section title="Follow-ups">
-        <FollowupForm action={boundAddFollowup} />
-        <FollowupList leadId={id} followups={(followups as Followup[]) ?? []} />
+        <FollowupForm action={boundAddFollowUp} placeholder="Ex: ligar de volta em 3 dias" />
+        <FollowupList leadId={id} followups={followUpsApenas} emptyMessage="Nenhum follow-up agendado." />
       </Section>
 
       {/* Interações */}
@@ -83,18 +115,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <InteracaoForm action={boundAddInteracao} />
         <ul className="flex flex-col gap-3">
           {((interacoes as Interacao[]) ?? []).map((i) => (
-            <li key={i.id} className="rounded-xl border border-border bg-white p-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-auge-green">
-                  {i.titulo || TIPO_LABEL[i.tipo]} · <span className="text-auge-green/50">{TIPO_LABEL[i.tipo]}</span>
-                </span>
-                <span className="text-xs text-auge-green/40">
-                  {format(new Date(i.data), "dd/MM/yyyy HH:mm")} ·{" "}
-                  {i.usuario_id ? usuarioMap.get(i.usuario_id) : "—"}
-                </span>
-              </div>
-              {i.transcricao && <p className="mt-2 whitespace-pre-wrap text-auge-green/80">{i.transcricao}</p>}
-            </li>
+            <InteracaoItem
+              key={i.id}
+              leadId={id}
+              interacao={i}
+              nomeAutor={i.usuario_id ? usuarioMap.get(i.usuario_id) ?? "—" : "—"}
+            />
           ))}
           {(!interacoes || interacoes.length === 0) && (
             <p className="text-sm text-auge-green/40">Nenhuma interação registrada.</p>
@@ -107,24 +133,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <PropostaForm action={boundAddProposta} />
         <ul className="flex flex-col gap-2">
           {((propostas as Proposta[]) ?? []).map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between rounded-xl border border-border bg-white p-4 text-sm"
-            >
-              <div>
-                <p className="font-medium text-auge-green">
-                  {p.valor ? `${p.moeda ?? ""} ${p.valor.toLocaleString("pt-BR")}` : "Valor não informado"}
-                </p>
-                <p className="text-xs text-auge-green/50">
-                  Enviada em {format(new Date(p.data_envio + "T00:00:00"), "dd/MM/yyyy")} · {p.status}
-                </p>
-              </div>
-              {p.link && (
-                <a href={p.link} target="_blank" rel="noreferrer" className="text-sm text-auge-brown hover:underline">
-                  Ver link
-                </a>
-              )}
-            </li>
+            <PropostaItem key={p.id} leadId={id} proposta={p} />
           ))}
           {(!propostas || propostas.length === 0) && (
             <p className="text-sm text-auge-green/40">Nenhuma proposta enviada ainda.</p>
@@ -135,17 +144,19 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   );
 }
 
-const TIPO_LABEL: Record<Interacao["tipo"], string> = {
-  ligacao: "Ligação",
-  reuniao: "Reunião",
-  nota: "Nota",
-};
-
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value, href }: { label: string; value: string; href?: string }) {
   return (
     <div>
       <dt className="text-xs uppercase tracking-wide text-auge-green/40">{label}</dt>
-      <dd className="text-auge-green">{value}</dd>
+      <dd className="text-auge-green">
+        {href ? (
+          <a href={href} target="_blank" rel="noreferrer" className="text-auge-brown hover:underline">
+            {value}
+          </a>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   );
 }

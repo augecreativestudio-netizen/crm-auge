@@ -11,11 +11,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: mercados } = await supabase.from("mercados").select("*").order("nome");
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex h-screen w-full overflow-hidden">
       <Sidebar usuario={usuario} />
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Topbar usuario={usuario} mercados={(mercados as Mercado[]) ?? []} />
-        <main className="flex-1 overflow-x-hidden bg-background px-4 py-6 md:px-6">
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background px-4 py-6 md:px-6">
           {children}
         </main>
       </div>

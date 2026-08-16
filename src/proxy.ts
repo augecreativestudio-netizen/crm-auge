@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/pipeline";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

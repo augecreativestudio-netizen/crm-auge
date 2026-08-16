@@ -23,7 +23,7 @@ export function KanbanColumn({
       <div className="flex items-center justify-between px-3 pt-3 pb-2">
         <h3
           className={cn(
-            "text-sm font-semibold",
+            "font-sans text-sm font-semibold",
             estagio === "fechado_ganho" && "text-emerald-700",
             estagio === "fechado_perdido" && "text-red-700",
             !isClosed && "text-auge-green"

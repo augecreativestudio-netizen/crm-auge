@@ -2,15 +2,18 @@ import type {
   EstagioPipeline,
   MotivoPerdaEnum,
   OrigemLead,
+  TipoFollowup,
   TipoInteracao,
   TipoMetaEnum,
 } from "@/lib/types/database";
 
 export const ESTAGIOS: { value: EstagioPipeline; label: string }[] = [
   { value: "novo_lead", label: "Novo lead" },
+  { value: "contato_inicial", label: "Contato inicial" },
   { value: "qualificacao", label: "Qualificação" },
   { value: "reuniao_agendada", label: "Reunião agendada" },
-  { value: "proposta_enviada", label: "Proposta enviada" },
+  { value: "proposta_enviada", label: "Proposta apresentada" },
+  { value: "follow_up", label: "Follow-up" },
   { value: "em_negociacao", label: "Em negociação" },
   { value: "fechado_ganho", label: "Fechado (ganho)" },
   { value: "fechado_perdido", label: "Fechado (perdido)" },
@@ -55,6 +58,11 @@ export const TIPOS_INTERACAO: { value: TipoInteracao; label: string }[] = [
   { value: "reuniao", label: "Reunião" },
   { value: "nota", label: "Nota" },
 ];
+
+export const TIPO_FOLLOWUP_LABEL: Record<TipoFollowup, string> = {
+  tarefa: "Tarefa",
+  follow_up: "Follow-up",
+};
 
 export const MERCADOS_CODIGO = ["BR", "INTL", "PT"] as const;
 

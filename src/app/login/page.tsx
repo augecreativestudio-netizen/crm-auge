@@ -9,15 +9,12 @@ export default function LoginPage() {
           <Image
             src="/auge-logo.png"
             alt="Auge Creative Studio"
-            width={96}
-            height={96}
-            className="h-24 w-24"
+            width={3824}
+            height={1130}
+            className="h-auto w-64"
             priority
           />
-          <div>
-            <h1 className="font-display text-2xl text-auge-green">CRM Auge</h1>
-            <p className="font-script text-lg text-auge-brown">creative studio</p>
-          </div>
+          <h1 className="font-display text-xl text-auge-green">CRM</h1>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">

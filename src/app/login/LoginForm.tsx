@@ -26,7 +26,7 @@ export function LoginForm() {
       return;
     }
 
-    router.push("/pipeline");
+    router.push("/dashboard");
     router.refresh();
   }
 
@@ -45,7 +45,7 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-auge-green outline-none transition focus:border-auge-brown focus:ring-2 focus:ring-auge-brown/20"
-          placeholder="voce@augecreative.studio"
+          placeholder="Seu e-mail"
         />
       </div>
 

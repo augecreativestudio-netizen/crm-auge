@@ -83,7 +83,12 @@ export function KanbanBoard({ leads }: { leads: LeadComRelacoes[] }) {
 
   return (
     <>
-      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <DndContext
+        id="kanban-board"
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex gap-4 overflow-x-auto pb-4">
           {ESTAGIOS_KANBAN.map((estagio) => (
             <KanbanColumn

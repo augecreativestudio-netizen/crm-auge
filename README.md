@@ -20,6 +20,9 @@ Internacional, Portugal). Ver [CLAUDE.md](./CLAUDE.md) para o briefing completo 
    - `0001_init.sql` — schema completo (mercados, usuários, leads, pipeline, interações,
      propostas, motivos de perda, follow-ups, metas, campanhas de ads) + RLS.
    - `0002_storage.sql` — bucket privado `propostas` para anexos.
+   - `0003_estagios_e_redes.sql` — estágios "Contato inicial"/"Follow-up" + Instagram/site do lead.
+   - `0004_contato_estruturado.sql` — separa "Contato" em telefone/e-mail/WhatsApp.
+   - `0005_tarefas_vs_followups.sql` — diferencia Tarefas (ação interna) de Follow-ups (contato).
 3. Em **Project Settings → API**, copie a `Project URL` e a `anon public key`.
 
 ### 2. Variáveis de ambiente
@@ -56,21 +59,49 @@ usuário:
 Usuários seguintes: um admin pode criar novos logins pelo mesmo painel (**Authentication →
 Users**); o trigger cuida do resto. Uma tela de "convidar membro da equipe" pode entrar na V2.
 
+## Deploy (Vercel)
+
+Pra equipe acessar de qualquer máquina, publique numa URL fixa em vez de rodar `npm run dev`
+localmente:
+
+1. Suba este repositório pro GitHub (crie um repositório novo, ex: `auge-creative/crm-auge`, e
+   dê `git push`).
+2. Em [vercel.com](https://vercel.com), crie uma conta (ou entre com a conta do GitHub) e clique em
+   **Add New → Project**, escolhendo esse repositório. O Vercel detecta Next.js automaticamente —
+   não precisa mexer em build command/output.
+3. Antes de clicar em **Deploy**, adicione as variáveis de ambiente (mesmo `.env.local` que você já
+   usa):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Clique em **Deploy**. Em ~1-2 minutos o Vercel te dá uma URL tipo `crm-auge.vercel.app`.
+5. No painel do Supabase, vá em **Authentication → URL Configuration** e ajuste:
+   - **Site URL**: a URL do Vercel (ex: `https://crm-auge.vercel.app`)
+   - **Redirect URLs**: adicione a mesma URL (necessário pros e-mails de recuperação de senha
+     funcionarem corretamente; sem isso o link do e-mail pode apontar pra `localhost`).
+6. Pronto — qualquer pessoa da equipe acessa pela URL do Vercel, de qualquer computador, sem
+   precisar instalar nada. Cada `git push` na branch principal gera um novo deploy automático.
+
+**Domínio próprio (opcional):** em **Project Settings → Domains** no Vercel, dá pra apontar algo
+como `crm.augecreative.studio` em vez do domínio `.vercel.app` — precisa configurar um registro DNS
+no provedor onde o domínio da Auge está registrado.
+
 ## Estrutura do projeto
 
 ```
 src/
   app/
     login/              tela de login (pública)
-    (dashboard)/         área autenticada (layout com sidebar + topbar)
+    (dashboard)/         área autenticada (layout com sidebar + topbar, fixos)
+      dashboard/          tela inicial: tarefas, follow-ups e metas do mês
       pipeline/           kanban do funil comercial
-      leads/              lista de leads, cadastro, detalhe (timeline/propostas/follow-ups)
+      leads/              lista de leads, cadastro, detalhe (timeline/propostas/tarefas/follow-ups)
       metas/              metas comerciais + painel real vs. meta (V2)
     actions/auth.ts      Server Action de logout
     proxy.ts             "Proxy" do Next 16 (era middleware.ts) — refresh de sessão + redirects
   components/
-    kanban/               board, coluna, card, modal de motivo de perda
-    leads/                formulários de interação/proposta/follow-up
+    kanban/               board, coluna, card (com selo de prazo), modal de motivo de perda
+    leads/                formulários e itens editáveis de interação/proposta/tarefa/follow-up
+    dashboard/            lista de tarefas/follow-ups pendentes do dashboard
     metas/                formulário de meta, card de progresso, seletor de período
     layout/               sidebar, topbar, seletor de mercado
   lib/
@@ -90,7 +121,12 @@ supabase/
 - **V2 (este repo)** — Metas comerciais + dashboard de acompanhamento (real vs. meta), em
   `/metas`. Admin cadastra metas por usuário (ou "time inteiro") × mercado × período × tipo
   (contatos/dia, propostas/semana, taxa de conversão, valor fechado); o "realizado" é calculado ao
-  vivo a partir de interações/propostas/histórico de estágio — não depende de job/cron. ✅
+  vivo a partir de interações/propostas/histórico de estágio — não depende de job/cron. Também
+  inclui: dashboard inicial (`/dashboard`) com tarefas/follow-ups e metas do mês; Tarefas (ação
+  interna, ex. "Elaborar proposta") separadas de Follow-ups (próximo contato com o lead), com
+  cadastro, lista e edição próprios; criação automática da tarefa "Elaborar proposta" ao mover um
+  lead para "Reunião agendada"; edição de interações/propostas/tarefas/follow-ups já lançados;
+  Instagram, site, telefone/e-mail/WhatsApp estruturados no cadastro do lead. ✅
 - **V3** — Integrações reais com Meta Ads e Google Ads (a tabela `campanhas_ads` já está
   desenhada para isso — ver seção 4.8 do briefing).
 - **V4** — Agente de IA para atendimento automático (projeto separado da Auge).

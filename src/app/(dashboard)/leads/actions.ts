@@ -5,12 +5,23 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { getCurrentUsuario } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
-import type { MotivoPerdaEnum, OrigemLead, PlataformaAds, TipoInteracao } from "@/lib/types/database";
+import type {
+  MotivoPerdaEnum,
+  OrigemLead,
+  PlataformaAds,
+  StatusProposta,
+  TipoFollowup,
+  TipoInteracao,
+} from "@/lib/types/database";
 
 const LeadSchema = z.object({
   nome: z.string().min(2, "Informe o nome do lead."),
   empresa: z.string().optional(),
-  contato: z.string().optional(),
+  telefone: z.string().optional(),
+  email: z.string().optional(),
+  whatsapp: z.string().optional(),
+  instagram: z.string().optional(),
+  site: z.string().optional(),
   mercado_id: z.string().uuid("Selecione o mercado."),
   origem: z.string(),
   responsavel_id: z.string().optional(),
@@ -25,7 +36,11 @@ export async function createLead(_prevState: LeadFormState, formData: FormData):
   const parsed = LeadSchema.safeParse({
     nome: formData.get("nome"),
     empresa: formData.get("empresa") || undefined,
-    contato: formData.get("contato") || undefined,
+    telefone: formData.get("telefone") || undefined,
+    email: formData.get("email") || undefined,
+    whatsapp: formData.get("whatsapp") || undefined,
+    instagram: formData.get("instagram") || undefined,
+    site: formData.get("site") || undefined,
     mercado_id: formData.get("mercado_id"),
     origem: formData.get("origem"),
     responsavel_id: formData.get("responsavel_id") || undefined,
@@ -36,7 +51,8 @@ export async function createLead(_prevState: LeadFormState, formData: FormData):
     return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
   }
 
-  const { nome, empresa, contato, mercado_id, origem, responsavel_id, nome_campanha } = parsed.data;
+  const { nome, empresa, telefone, email, whatsapp, instagram, site, mercado_id, origem, responsavel_id, nome_campanha } =
+    parsed.data;
   const supabase = await createClient();
 
   let campanha_id: string | null = null;
@@ -59,7 +75,11 @@ export async function createLead(_prevState: LeadFormState, formData: FormData):
     .insert({
       nome,
       empresa: empresa || null,
-      contato: contato || null,
+      telefone: telefone || null,
+      email: email || null,
+      whatsapp: whatsapp || null,
+      instagram: instagram || null,
+      site: site || null,
       mercado_id,
       origem: origem as OrigemLead,
       campanha_id,
@@ -140,7 +160,17 @@ export async function addProposta(leadId: string, formData: FormData) {
   revalidatePath("/pipeline");
 }
 
-export async function addFollowup(leadId: string, formData: FormData) {
+/** Tarefa = ação interna do vendedor (ex: "Elaborar proposta"). */
+export async function addTarefa(leadId: string, formData: FormData) {
+  await addFollowupComTipo(leadId, formData, "tarefa");
+}
+
+/** Follow-up = próximo contato com o lead (ex: "Ligar de volta em 3 dias"). */
+export async function addFollowUp(leadId: string, formData: FormData) {
+  await addFollowupComTipo(leadId, formData, "follow_up");
+}
+
+async function addFollowupComTipo(leadId: string, formData: FormData, tipo: TipoFollowup) {
   const usuario = await getCurrentUsuario();
   const supabase = await createClient();
 
@@ -149,6 +179,7 @@ export async function addFollowup(leadId: string, formData: FormData) {
 
   const { error } = await supabase.from("followups").insert({
     lead_id: leadId,
+    tipo,
     titulo,
     data_prevista: dataPrevista,
     responsavel_id: usuario.id,
@@ -156,6 +187,63 @@ export async function addFollowup(leadId: string, formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath(`/leads/${leadId}`);
+  revalidatePath("/pipeline");
+  revalidatePath("/dashboard");
+}
+
+export async function updateInteracao(leadId: string, interacaoId: string, formData: FormData) {
+  await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const tipo = formData.get("tipo") as TipoInteracao;
+  const titulo = (formData.get("titulo") as string) || null;
+  const transcricao = (formData.get("transcricao") as string) || null;
+
+  const { error } = await supabase
+    .from("interacoes")
+    .update({ tipo, titulo, transcricao })
+    .eq("id", interacaoId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/leads/${leadId}`);
+}
+
+export async function updateProposta(leadId: string, propostaId: string, formData: FormData) {
+  await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const link = (formData.get("link") as string) || null;
+  const valorRaw = formData.get("valor") as string;
+  const valor = valorRaw ? Number(valorRaw) : null;
+  const moeda = (formData.get("moeda") as string) || null;
+  const dataEnvio = (formData.get("data_envio") as string) || undefined;
+  const status = formData.get("status") as StatusProposta;
+
+  const { error } = await supabase
+    .from("propostas")
+    .update({ link, valor, moeda, data_envio: dataEnvio, status })
+    .eq("id", propostaId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/leads/${leadId}`);
+}
+
+export async function updateFollowup(leadId: string, followupId: string, formData: FormData) {
+  await getCurrentUsuario();
+  const supabase = await createClient();
+
+  const titulo = formData.get("titulo") as string;
+  const dataPrevista = formData.get("data_prevista") as string;
+
+  const { error } = await supabase
+    .from("followups")
+    .update({ titulo, data_prevista: dataPrevista })
+    .eq("id", followupId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/leads/${leadId}`);
+  revalidatePath("/pipeline");
+  revalidatePath("/dashboard");
 }
 
 export async function toggleFollowup(leadId: string, followupId: string, concluido: boolean) {

@@ -26,9 +26,11 @@ export type OrigemLead =
 
 export type EstagioPipeline =
   | "novo_lead"
+  | "contato_inicial"
   | "qualificacao"
   | "reuniao_agendada"
   | "proposta_enviada"
+  | "follow_up"
   | "em_negociacao"
   | "fechado_ganho"
   | "fechado_perdido";
@@ -47,6 +49,9 @@ export type MotivoPerdaEnum =
   | "outro";
 
 export type PlataformaAds = "meta_ads" | "google_ads";
+
+/** tarefa = ação interna do vendedor; follow_up = próximo contato com o lead */
+export type TipoFollowup = "tarefa" | "follow_up";
 
 export type TipoMetaEnum =
   | "contatos_dia"
@@ -90,7 +95,13 @@ export type LeadCliente = {
   id: string;
   nome: string;
   empresa: string | null;
+  /** @deprecated substituído por telefone/email/whatsapp — mantido só por compatibilidade com dados antigos */
   contato: string | null;
+  telefone: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  instagram: string | null;
+  site: string | null;
   mercado_id: string;
   origem: OrigemLead;
   campanha_id: string | null;
@@ -146,6 +157,7 @@ export type MotivoPerda = {
 export type Followup = {
   id: string;
   lead_id: string;
+  tipo: TipoFollowup;
   titulo: string;
   data_prevista: string;
   concluido: boolean;
