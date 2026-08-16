@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --background: #EFE9D3;
+  --foreground: #1B4330;
+
+  /* Auge Creative Studio brand palette */
+  --color-auge-green: #1B4330;
+  --color-auge-green-light: #2E5C43;
+  --color-auge-brown: #A75F1E;
+  --color-auge-brown-light: #C57935;
+  --color-auge-beige: #EFE9D3;
+  --color-auge-beige-dark: #E2D9B8;
+
+  --color-card: #ffffff;
+  --color-border: #D9D0AE;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-auge-green: var(--color-auge-green);
+  --color-auge-green-light: var(--color-auge-green-light);
+  --color-auge-brown: var(--color-auge-brown);
+  --color-auge-brown-light: var(--color-auge-brown-light);
+  --color-auge-beige: var(--color-auge-beige);
+  --color-auge-beige-dark: var(--color-auge-beige-dark);
+  --color-card: var(--color-card);
+  --color-border: var(--color-border);
+
+  --font-display: var(--font-calistoga);
+  --font-sans: var(--font-poppins);
+  --font-script: var(--font-caveat);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #12251c;
+    --foreground: #EFE9D3;
+    --color-card: #1B3226;
+    --color-border: #2E5C43;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
